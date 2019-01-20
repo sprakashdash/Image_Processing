@@ -1,0 +1,245 @@
+What we learnt:
+Greyscale:
+    We perceive an image as as 11.4% blue, 29.9% green, 58.7% red.
+Trackbar:
+A tracker creates a threshold value based on which a pixel's value can be changed.
+Function:
+
+createTracker("tracker_name","window_name",&var,var_max,func(int,*void),&img);
+
+Where,
+Tracker_name is the name of the track bar
+Window_name is the name of the window in which the track bar appears
+Var is the value set by the tracker - passed by reference
+Var_max = the maximum value that var can go upto. // minimum is always 0.
+Func is the function called after adjusting the track bar.
+Img = the Mat image passed by reference that is modified by the func according to the tracker value.
+
+Kernel: A square subportion of the image.
+Resizing an image:
+To make the picture half its original size, we can choose the pixels in various ways:
+We can take only even or odd rows and columns. 
+We can take a 2x2 kernel and find average of the pixel values in the kernel and assign it to the centre pixel.            // preferred.
+
+Brightness: Intensity of the picture.
+Contrast: sharpness of the pixel values.
+
+To increase brightness, add a value to the pixel values of the image.
+To increase contrast, multiply by a value to the pixel.
+
+a.I : mean and variance increase. => Contrast increases.
+I+b : mean increases. => Contrast doesn't change. only brightness.
+
+If we want to change both, the do (aI+b) for all pixels.
+Note: Here, as the data type is an unsigned integer of 8 bits, we need to take care of overflow conditions.
+
+Rotation of an image:
+Use axes rotation formula for rotating an object.
+
+Noise reduction:
+Salt and pepper noise: Random spikes of black and white in an image.
+We can apply filters to reduce the noise.
+Median filter:
+Take a 3x3 kernel and take the median of all the pixels in it. Then assign that value to the middle pixel of the kernel.
+Mean filter:
+Take a 3x3 kernel and take the mean of all the pixel values in it. Assign this value to the middle pixel of the kernel.
+Gaussian filter:
+Take weighted mean of all the pixel values and assign this to the middle pixel of a 3x3 kernel.
+
+Blurring an image:
+
+Mean blur: Take 3x3 kernel and assign the mean of all the pixel values to the centre pixel.
+Median blur: Take 3x3 kernel and assign the median of all the pixel values to the centre pixel.
+Gaussian blur:  [1/16 1/8 1/16 ; 1/8 1/4 1/8; 1/16 1/8 1/16] weighted value of the pixel values in the kernel is added to the central pixel.
+
+While taking kernel, we are not considering the edges of the image. In order to include these values,
+there are certain methods:
+
+1. Extend the image's edges with another layer of black edge
+    Disadvantage = Effect of black edge gives the look of leaking image(not desired)
+2. Wrap the image = add the ending edge ahead of stating edge while considering kernel.
+3. Extend the same edge one layer ahead for considering kernel.
+4. Take mirror image about the edge layer one layer ahead and consider this for the kernel (recommended).
+
+
+Codes done in class:
+0. Converting colour image to grayscale:
+    Add the pixel values according to the weighted relation of 11.4%, 29.9% and 58.7% for red respectively.
+
+for(int i=0;i<img.rows;i++){
+        for(int j=0;j<img.cols;j++){
+            img2.at<uchar> (i,j) = (0.114*img.at<Vec3b> (i,j)[0] +0.299*img.at<Vec3b> (i,j)[1]+0.587*img.at<Vec3b> (i,j)[2]);
+        }
+    }
+
+
+1.Extracting an image of a red apple from a fruit basket.
+    Set 6 trackbars for the minimum and maximum thresholds of red, blue, and green. If the value of the pixel lies within the threshold values, keep the pixel values. Else make the pixel as black. Since we need an apple(which is red in colour) we set high threshold values for red and low for blue and gree.
+
+//The trackbar’s callback function is : 
+void slide(int size,void *data)
+{
+    Mat *img = ((Mat*)data);
+    Mat img2(img->rows,img->cols,CV_8UC3);
+    for(int i=0;i<img->rows;i++){
+        for(int j=0;j<img->cols;j++){
+            if(img->at<Vec3b>(i,j)[0]>b &&img->at<Vec3b>(i,j)[0]<B
+ &&img->at<Vec3b>(i,j)[1]>g&&img->at<Vec3b>(i,j)[1]<G && 
+img->at<Vec3b>(i,j)[2]>r && img->at<Vec3b>(i,j)[2]<R)
+{
+                img2.at<Vec3b>(i,j)[0] = img->at<Vec3b>(i,j)[0];
+                img2.at<Vec3b>(i,j)[1] = img->at<Vec3b>(i,j)[1];
+                img2.at<Vec3b>(i,j)[2] = img->at<Vec3b>(i,j)[2];
+            }
+            else{
+                img2.at<Vec3b>(i,j)[0] = 0;
+                img2.at<Vec3b>(i,j)[1] = 0;
+                img2.at<Vec3b>(i,j)[2] = 0;
+            }
+        }
+    }
+    imshow("apple",img2);
+}
+
+2.Shrinking an image by half:
+    We take a 2x2 kernel and put the average value of all the pixel values in it in a single spot of another image.
+
+void shrink(Mat img)
+{
+    Mat img2(img.rows/2,img.cols/2,CV_8UC3);
+    for(int i=0;i<img.rows;i++){
+        for(int j=0;j<img.cols;j++){
+            img2.at<Vec3b>(i/2,j/2)[0] += img.at<Vec3b>(i,j)[0]/4; 
+            img2.at<Vec3b>(i/2,j/2)[1] += img.at<Vec3b>(i,j)[1]/4;
+            img2.at<Vec3b>(i/2,j/2)[2] += img.at<Vec3b>(i,j)[2]/4;
+        }
+    }
+    imshow("half",img2);
+}
+
+3. Improving contrast and brightness of an image:
+    We multiply the image pixel value by some number to increase contrast and add some other value to adjust brightness.
+
+            float alpha = 1.2;                                 //value for setting contrast
+    int beta = 15;                // value for setting brightness.                    
+    for(int i=0;i<img.rows;i++){
+        for(int j=0;j<img.cols;j++){
+            unsigned int a = img.at<uchar>(i,j)*alpha;
+            img.at<uchar>(i,j) = img.at<uchar>(i,j) >  a? img.at<uchar>(i,j) : a; 
+            if(img.at<uchar>(i,j)<255-beta)
+                img.at<uchar>(i,j)+= beta;
+            else{
+                img.at<uchar>(i,j) = 255;
+            }
+        }
+    }
+
+4. Mean blur: 
+
+void mean_blur(Mat img)
+{
+    Mat img2(img.rows,img.cols,CV_8UC1);
+    for(int i=1;i<img.rows-1;i++){
+        for(int j=1;j<img.cols-1;j++){
+            int a=0;
+            for(int k= i-1;k<i+2;k++){
+                for(int l=j-1;l<j+2;l++){
+                    a += img.at<uchar>(k,l);
+                }
+            }
+            img2.at<uchar>(i,j) = a/9;
+        }
+    }
+    imshow("blur",img2);
+}
+
+5.Median blur:
+
+void median_blur(Mat img)
+{
+    Mat img2(img.rows,img.cols,CV_8UC3);
+    for(int i=1;i<img.rows-1;i++){
+        for(int j=1;j<img.cols-1;j++){
+            vector<int> v1,v2,v3;
+            for(int k= i-1;k<i+2;k++){
+                for(int l=j-1;l<j+2;l++){
+                    v1.push_back(img.at<Vec3b>(k,l)[0]);
+                    v2.push_back(img.at<Vec3b>(k,l)[1]);
+                    v3.push_back(img.at<Vec3b>(k,l)[2]);
+                }
+            }
+            sort(v1.begin(),v1.end());
+            sort(v2.begin(), v2.end());
+            sort(v3.begin(), v3.end());
+            img2.at<Vec3b> (i,j)[0] = v1[4];
+            img2.at<Vec3b> (i,j)[1] = v2[4];
+            img2.at<Vec3b> (i,j)[2] = v3[4];
+
+        }
+    }
+    imshow("median_blur",img2);
+
+}
+
+7. Gaussian blur:
+
+ void gaussian_blur(Mat img)
+ {
+     Mat img2(img.rows,img.cols,CV_8UC3);
+     for(int i=1;i<img.rows-1;i++){
+         for(int j=1;j<img.cols;j++){
+             for(int k=0;k<3;k++){
+                 int a=0;
+         a = (img.at<Vec3b>(i-1,j-1)[k] + img.at<Vec3b>(i-1,j+1)[k] +  
+                              img.at<Vec3b>(i+1,j-1)[k] + img.at<Vec3b>(i+1,j+1)[k])/16 +
+                              (img.at<Vec3b>(i,j-1)[k] + img.at<Vec3b>(i,j+1)[k] + img.at<Vec3b>(i+1,j)[k]
+                               + img.at<Vec3b>(i-1,j)[k])/8 + (img.at<Vec3b>(i,j)[k])/4;
+         img2.at<Vec3b>(i,j)[k] = a;
+         }
+          }
+     }
+     imshow("gaussian_blur",img2);
+ }
+
+8. Rotating an image with trackbar:
+
+createTrackbar("angle","rotation",&t,360,rotate,&img);
+void rotate(int size, void *data)
+{
+    double theta = ((double)t/180)*3.14159;
+    Mat* img = (Mat*)data;
+    int a = sqrt(img->rows*img->rows + img->cols*img->cols);
+    Mat img2(a,a,CV_8UC3,Scalar(0,0,0));
+    for(int i=0;i<img->rows;i++){
+        for(int j=0;j<img->cols;j++){
+            int p = i - img->rows/2;
+            int q = j - img->cols/2;
+            int x =  ((double)p)*cos(theta) + ((double)q)*sin(theta);
+            int y = (-(double)p)*sin(theta) + ((double)q)*cos(theta);
+            for(int k=0;k<3;k++){
+        img2.at<Vec3b>(x+a/2,y+a/2)[k] = img->at<Vec3b>(i,j)[k];
+            }
+        }
+    }
+    imshow("rotation",img2);
+
+}
+
+9. Vignette filter:
+createTrackbar("vignette","vignette",&t,100,vignette,&img);
+void vignette(int size,void* data)
+{
+    double d,dm;
+    Mat* img = (Mat*)data;
+    Mat img2(img->rows,img->cols,CV_8UC3);
+    dm = sqrt((img->rows)/2*(img->rows)/2+(img->cols/2)*(img->cols/2));
+    for(int i=0;i<img->rows;i++){
+       for(int j=0;j<img->cols;j++){    
+                   d=sqrt((i-img->rows/2)*(i-img->rows/2)+(j-img->cols/2)*(j-img->cols/2))*(t/100.0);
+        for(int k=0;k<3;k++)
+            img2.at<Vec3b>(i,j)[k] = img->at<Vec3b>(i,j)[k]*(1.0-d/dm);
+        }
+    }
+    imshow("vignette",img2);
+}
+

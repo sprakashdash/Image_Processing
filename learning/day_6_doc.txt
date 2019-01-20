@@ -1,0 +1,38 @@
+Path Planning Algorithms:
+Dijkstras Algorithm: 
+    Single source shortest path to all nodes in a graph. It is a greedy algorithm.
+
+A-Star Algorithm:
+    This is also a greedy algorithm to find shortest path between two nodes.
+    In this algorithm, we find the sum of weight of edge + heuristic function for a source to all its neighbours and we move in the direction of least sum. 
+    Here, heuristic function is the distance function like manhattan distance = |x1-x2|+|y1-y2|
+
+RRT Algorithm:
+    Here we randomly explore the paths that fall within the step size.
+
+Basics of autonomous robotics:
+
+A bot is made up of mainly - Sensors, Microcontrollers, Actuators.
+Sensors = camera, etc.
+Microcontroller - Arduino.
+
+Arduinos are programmed according to bot requirement. General arduino program consists of a void setup{} that runs only once and a void loop{} that is looped.
+
+E.g. 
+void setup
+{
+pinMode(5,OUTPUT)
+}
+Void loop
+{
+digitalWrite(5,HIGH);
+delay(1000);
+}
+
+The pins A0 - A5 of arduino are for analog input and rest are for digital input.
+
+Pulse Width Modulation: 
+If both motors don’t have same rpm, drift occurs. To prevent this, pwm is used. (Given through enable input)
+
+Duty cycle is linearly dependent on rpm of motor. 
+L293D: Most commonly used motor driver. 

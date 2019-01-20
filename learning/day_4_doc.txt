@@ -1,0 +1,136 @@
+What we learnt:
+
+Graph implementation:
+    We can represent each pixel in the image as a node in graph with each adjacent pixels as its neighbours in the graph. 
+
+Traversal: BFS and DFS
+
+BFS: Breadth first search. Here while traversal, we give more priority to its neighbours than its descendants. It is done using stacks. 
+DFS: Depth first search. Here while traversal, we give more priority to its descendants than its neighbours. It is done using queues.
+
+Application: Blob detection. We can use BFS/DFS to detect number of disconnected components of the required colour in the graph. Each of these disconnected components represent a blob. 
+
+Mouse call back:
+
+setMouseCallback("window_name",callback);   //callback = function called by mouse click
+void callback(int event,int y,int x, int d, void*);  // (y,x) = coordinates of the event location.
+if(event==EVENT_LBUTTONDOWN)            // left mouse button;
+if(event == EVENT_MOUSEMOVE)        // moving mouse;
+
+
+Codes:
+BFS:
+void bfs(Mat img)
+{
+    Mat img2(img.rows,img.cols,CV_8UC1,Scalar(0));
+    Mat img3(img.rows,img.cols,CV_8UC3,Scalar(255,255,255));
+    srand(time(NULL));
+    int blobs = 0;
+    for(int i=0;i<img.rows;i++){
+        for(int j=0;j<img.cols;j++){
+            if(checkcolor(&img,i,j) && img2.at<uchar>(i,j) == 0){
+                blobs++;
+                q.push(make_pair(i,j));
+                img2.at<uchar>(i,j) = 255;
+                int rnd1 = rand()%256;
+                int rnd2 = rand()%256;
+                int rnd3 = rand()%256;
+                img3.at<Vec3b>(i,j)[0] = rnd1;
+                img3.at<Vec3b>(i,j)[1] = rnd2;
+                img3.at<Vec3b>(i,j)[2] = rnd3;
+                while(!q.empty()){
+                    pair<int, int> p = q.front();
+                    q.pop();
+                    // img2.at<uchar>(p.first,p.second) = 255;
+                    for(int k=p.first-1;k<p.first+2;k++){
+                        for(int l=p.second-1;l<p.second+2;l++){
+                            if(checkpt(&img,k,0)&&checkpt(&img,l,1)){
+                                if(img2.at<uchar>(k,l)==0 && checkcolor(&img,k,l)){
+                                    img2.at<uchar>(k,l) = 255;
+                                    q.push(make_pair(k,l));
+                                    img3.at<Vec3b>(k,l)[0] = rnd1;
+                                    img3.at<Vec3b>(k,l)[1] = rnd2;
+                                    img3.at<Vec3b>(k,l)[2] = rnd3;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    cout<<"No. of blobs = "<<blobs<<endl;
+    imshow("wn",img3);
+}
+
+
+DFS:
+void dfs(Mat img)
+{
+    // vector<vector<bool> > v[img.rows][img.cols];
+    srand(time(NULL));
+    Mat img2(img.rows,img.cols,CV_8UC3,Scalar(255,255,255));
+    int v[img.rows][img.cols];
+    int blobs = 0;
+    for(int i=0;i<img.rows;i++){
+        for(int j=0;j<img.cols;j++){
+            v[i][j] = 0;
+        }
+    }
+    for(int i=0;i<img.rows;i++){
+        for(int j=0;j<img.cols;j++){
+            if(img.at<uchar>(i,j)<200 && v[i][j] == 0){
+                blobs++;
+                int rnd1 = rand()%256;
+                int rnd2 = rand()%256;
+                int rnd3 = rand()%256;
+                img2.at<Vec3b>(i,j)[0] = rnd1;
+                img2.at<Vec3b>(i,j)[1] = rnd2;
+                img2.at<Vec3b>(i,j)[2] = rnd3;
+                s.push(make_pair(i,j));
+
+                v[i][j] = 1;
+                while(!s.empty()){
+                    pair<int, int> p = s.top();
+                    s.pop();
+                    for(int k=p.first-1;k<p.first+2;k++){
+                        for(int l=p.second-1;l<p.second+2;l++){
+                            if(k>=0 && k<img.rows && l>=0 && l<img.cols){
+                                if(v[k][l] == 0 && img.at<uchar>(k,l) <200){
+                                    v[k][l] = 1;
+                                    s.push(make_pair(k,l));
+                                    img2.at<Vec3b>(k,l)[0] = rnd1;
+                                    img2.at<Vec3b>(k,l)[1] = rnd2;
+                                    img2.at<Vec3b>(k,l)[2] = rnd3;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    cout<<"no. of blobs = "<<blobs<<endl;
+imshow("colours",img2);
+}
+
+Mouse callback:
+
+int main()
+{
+    namedWindow("window",WINDOW_NORMAL);
+    imshow("window",img);
+    setMouseCallback("window",callback);
+    waitKey(0);
+}
+
+void callback(int event, int x, int y, int d, void*)
+{
+    // if(event == EVENT_LBUTTONDOWN);
+    if(event==EVENT_MOUSEMOVE)
+        cout<<x<<" "<<y<<endl;
+}
+
+
+
+

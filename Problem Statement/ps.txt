@@ -1,0 +1,9 @@
+Problem statement 1:
+
+The first problem statement for the Image Processing workshop Phase 1 is to divide an image into 9 equal parts and then jumble them and recreate the image using the original image as reference.
+
+Problem statement 2:
+
+The second problem statement for the Image Processing workshop Phase 1 is to count the score of the bot in the given video. 
+The score for reaching a square shape and back to the home base is 100 points. 
+The score for reaching a triangular shape and back to home base is 200 points.

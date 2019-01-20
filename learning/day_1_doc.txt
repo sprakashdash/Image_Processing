@@ -1,0 +1,100 @@
+What we learnt:
+C++ code:
+
+namespace: same function can be present in many libraries. 
+using namespace std specifies which namespace the function should be in. 
+
+Basic parts like arrays, loops, etc of C and C++ are same.
+
+struct: custom data types. But everything in a struct is accessible i.e. Public.
+
+OOPs in C++:
+
+Class in c++ is similar to struct. But we can have the properties as public, private or protected. 
+We can restrict the direct access of these properties and methods from outside the class.
+
+Image:
+
+2-D matrix. Black n white or Colour..
+
+Black and white: Pixel has value 0 for black and 1 for white.
+Greyscale: Has pixel values ranging from 0 to 1. 0 for black and 1 for white. Value represents intensity of the colour.
+
+Colour: Each pixel has 3 values: R,G,B. ranging from 0-255 with 0 for no intensity, 255 for max intensity. 
+While accessing each pixel, we look at the pixel's value. 
+
+Black - all 3 values has 0
+White - all 3 are 255
+If only one value is 255, others are both 0, then it is that colour's max intensity.
+
+Mat - data structure for storing images in opencv
+Mat img(50,50,cv_8UC1,scalar(0))
+constructor to create a 50x50 grayscale black box.
+
+=========================================================================
+#include "opencv2/highgui.hpp"            // important headers to include
+#include "opencv2/imgproc.hpp"
+#include "opencv2/core.hpp"
+=========================================================================
+
+namedWindow("win",WINDOW_NORMAL);                       // to custom resize the image
+namedWindow(“win”,WINDOW_AUTOSIZE);                 // to resize the image to fixed size. 
+imshow("win",img);                             // show the image in the window named "win"
+
+waitKey(0);                // image stays in window until some user input
+waitKey(1000);              // image stays in window for 1000 ms
+
+accessing pixels of an image
+
+Mat img;
+
+img.at<uchar> (i,j) = 255;               // for grayscale image
+img.at<Vec3b> (i,j) = {255,255,255}               // for colour image = {B,G,R}
+
+To read an image from system:
+
+imread("path_to_image",1/0)                   // if image in same location as code, specify only name.
+                          // 1 for colour, 0 for gray scale reading.
+
+to save an image to system:
+
+imwrite("filename",img);           // filename - name with which to be saved. img - Mat object.
+
+
+Codes done in class:
+1.Create yellow square:                                  // yellow = red+green
+Initialize a colour 3 channel image with {B,G,R} values  = {0,255,255}
+
+Mat img(500,500,CV_8UC3,Scalar(0,255,255));
+
+2.Create an image with a diagonal half as red and other as green:
+    Initialize a colour 3 channel image with red colour. 
+    Loop through the image with counters i,j and when i<j put img.at<Vec3b> (i,j) = green.
+
+Mat img(500,500,CV_8UC3,Scalar(0,0,255));
+    for(int i=0;i<500;i++){
+        for(int j=0;j<500;j++){
+            if(i<j){
+                img.at<Vec3b> (i,j)[1] = 255;
+                img.at<Vec3b> (i,j)[2] = 0;
+            }
+        }
+    }
+
+
+3. Create chess board:
+Initialize a 8x8 grayscale image with black colour.
+Set window size to normal.
+Loop through the pixels with i and j as counters. Whenever (i+j)%2==0, set the pixel value to 255(white).
+
+Mat img(8,8,CV_8UC1);
+    namedWindow("chessboard",WINDOW_NORMAL);
+    for(int i=0;i<8;i++){
+        for(int j=0;j<8;j++){
+            if((i+j)%2==0){
+                img.at<uchar> (i,j) = 255;  
+            }
+        }
+    }
+
+

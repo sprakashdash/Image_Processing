@@ -1,0 +1,197 @@
+What we learnt:
+Noise reduction methods:
+
+1.) Erosion: for image with black background and white lines.
+    Take a 3x3 kernel and assign the minimum value of the pixels values to all the pixels.
+
+2.) Dilation: For image with white background and black object
+    Assign maximum value in the kernel to all the 
+    
+Edge Detection:
+
+Edges - where there is a gradient in the pixel values.
+    For horizontal edges, we check gradient along y-direction. => [1 1 1;0 0 0; -1 -1 -1] matrix
+    For vertical edges, we check gradient along x-direction. => [-1 0 1; -1 0 1; -1 0 1] matrix
+    This is Prewitt filter.
+
+    Sebel Filter: [-1 0 1; -2 0 2; -1 0 1]
+
+Efficient method to detect edges = Canny method. [inbuilt function]
+step 1: gaussian filter - to remove noise.
+step 2: sebel filter
+step 3: thinning of edges => to remove blurred edges.
+step 4: we have two threshold values, upper and lower.
+    If a part of an edge is present inside the threshold range then kernel values are
+            considered. If it is greater than upper, then it is set to 255. If it is lower than lower
+            threshold, then it is set to 0. 
+step 5: non-maximal separation => double thresholding
+    if a weak edge is connected to a strong edge, then it is retained.
+    else if only a weak edge is present, then we remove it
+
+
+Reading a video:
+videocapture vid(0)          // if 0 is given, then front camera open
+                 // else we can specify path to the video
+video is a sequence of frames.
+while(1){                                  // infinite loop - need to specify breaking condition at end of video.
+    vid.read(img);             // To read the frame in Mat img.
+}
+
+
+
+
+
+Codes:
+Erosion:
+
+void erosion(Mat img)
+{
+        Mat img2(img.rows,img.cols,CV_8UC1);
+        for(int i=0;i<img.rows-2;i++){
+            for(int j=0;j<img.cols-2;j++){
+                std::vector<int> v;
+            for(int k=i;k<i+3;k++){
+            for(int l=j;l<j+3;l++){
+                v.push_back(img.at<uchar>(k,l));
+            }
+            }
+            int a = *min_element(v.begin(), v.end());
+            for(int k=i;k<i+3;k++){
+                for(int l=j;l<j+3;l++){
+                    img2.at<uchar>(k,l) = a;
+                }
+            }
+        }
+    }
+    imshow("erosion",img2);
+        }
+
+2. Dilation:
+
+    void dilation(Mat img)
+    {
+        Mat img2(img.rows,img.cols,CV_8UC1);
+        for(int i=0;i<img.rows-2;i++){
+    for(int j=0;j<img.cols-2;j++){
+        std::vector<int> v;
+        for(int k=i;k<i+3;k++){
+            for(int l=j;l<j+3;l++){
+        v.push_back(img.at<uchar>(k,l));
+            }
+        }
+        int a = *max_element(v.begin(), v.end());
+        for(int k=i;k<i+3;k++){
+            for(int l=j;l<j+3;l++){
+                img2.at<uchar>(k,l) = a;
+            }
+        }
+        }
+    }
+    imshow("dilation",img2);
+}
+
+3. Edge detection using Prewitt filter:
+
+Gradient along x-direction:
+Mat gradient_x(Mat img)
+{
+    Mat img2(img.rows,img.cols,CV_8UC1);
+    for(int i=0;i<img.rows-2;i++){
+        for(int j=0;j<img.cols-2;j++){
+            int a=0;
+            for(int k=0;k<3;k++){
+                for(int l=0;l<3;l++){
+                    if(k==0){
+                        a+= img.at<uchar>(i+l,j+k)*(-1);
+                    }
+                    else if(k==2){
+                        a+= img.at<uchar>(i+l,j+k);
+                    }
+                }
+            }
+
+            if(a<0)
+                img2.at<uchar>(i+1,j+1) = 0;
+            else if(a>255)
+                img2.at<uchar>(i+1,j+1) = 255;
+            else img2.at<uchar>(i+1,j+1) = a;
+        }
+    }
+    return img2;
+}
+
+
+Gradient along y-direction:
+Mat gradient_y(Mat img)
+{
+    Mat img2(img.rows,img.cols,CV_8UC1);
+    for(int i=0;i<img.rows-2;i++){
+        for(int j=0;j<img.cols-2;j++){
+            int a=0;
+            for(int k=0;k<3;k++){
+                for(int l=0;l<3;l++){
+                    if(k==0){
+                        a+= img.at<uchar>(i+k,j+l)*(-1);
+                        // if(l==1)
+                            // a-=img.at<uchar>(i+k,j+l);
+                    }
+                    else if(k==2){
+                        a+= img.at<uchar>(i+k,j+l);
+                        // if(l==1)
+                            // a+=img.at<uchar>(i+k,j+l);
+                    }
+                }
+            }
+            if(a<0)
+                img2.at<uchar>(i+1,j+1) = 0;
+            else if(a>255)
+                img2.at<uchar>(i+1,j+1) = 255;
+            else img2.at<uchar>(i+1,j+1) = a;
+        }
+    }
+    return img2;
+}
+
+Function to add the gradients:
+
+void disp(int , void* data)
+{
+
+    Mat img1 = gradient_x(*(Mat*)data);
+    Mat img2 = gradient_y(*(Mat*)data);
+    Mat img(img1.rows,img1.cols,CV_8UC1,Scalar(0));
+    for(int i=0;i<img.rows;i++){
+        for(int j=0;j<img.cols;j++){
+            int a = fabs(img1.at<uchar>(i,j));
+            int b = fabs(img2.at<uchar>(i,j)); 
+            if(a + b > t)
+                img.at<uchar>(i,j) = 255;
+        }
+    }
+    imshow("edges",img);
+}
+
+4. Canny filter(using trackbar):
+Call-back function of trackbar:
+
+void caller(int ,void *data)
+{
+    Mat img1 = *((Mat*)data);
+    Mat img2(img1.rows,img1.cols,CV_8UC1);
+    Canny(img1,img2,l,h,3);
+    imshow("edge",img2);
+}
+
+5. Reading a video frame:
+
+VideoCapture vid("video.mp4");
+    Mat img;
+    while(vid.read(img))
+    {
+        // code to modify img 
+        imshow("video",img);
+        waitKey(0);
+    }
+
+
+

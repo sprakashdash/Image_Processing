@@ -1,0 +1,88 @@
+What we learnt:
+
+Hough Transformation:
+     Used for line detection in an image. 
+    Transformation of a line from coordinate system to (r,) system. => parametric form of a line. 
+    For every point, if we plot the (r,)values for all the lines that pass through it, we get a sinusoidal curve.
+    By plotting the sine curves for all the points in the image, we get many intersecting sine curves. The points of intersection where the density is high indicates the true lines that are present in the original image. By transforming these (r,) values back to the coordinate system, we can get the lines in the image.
+ 
+Contour detection:
+    Contours are closed loops in the image. 
+    inbuilt function:
+    findContours(image,contours,heirarchy,mode,method);
+
+    contours -> Vector<vector<point>>                       //stores the points present in contour[i]
+    hierarchy -> vector<Vec4i>             // 4-channel vector;
+    Each element of the vector, hierarchy[i]   =   {next,previous,child,parent}
+    mode:
+        RETR_EXTERNAL
+        RETR_LIST
+        RETR_CCOMP
+        RETR_TREE
+        RETR_FLOODFILL
+    method:
+        CHAIN_APPROX_NONE => stores all the pixels in the contour in the vector of vectors.
+        CHAIN_APPROX_SIMPLE => compacts the pixels in the contour, for e.g. for a rectangle only corners are stored
+
+HSV scale:
+    B' = B/255; G'=G/255; R'=R/255
+    V = max(B',G',R')
+    S = {  v-min(R',G',B') /v; if v!=0
+        {  0 if v=0
+    H = { 60(G'-B')/(V-min(R',G',B')) , V=R
+        { 120+60(B'-R')/ (V-min(R',G',B'), V=G
+        { 240 + 60(R'-G')/(V-min(R',G',B'), V=B
+
+    cvtcolour(img,out,BGR2HSV);                // inbuilt function for converting bgr to  hsv scale.
+Template Matching:
+    An image is given and the template of an object in it is given. We need to identify or locate the template in the image.
+
+    We take the square of the difference of pixel values between the template and kernels in the image. Wherever it is minimum, that is the probable location of the template.
+
+Corner Detection:
+    There is gradient change in both x and y directions.
+    E(u,v) = Sigma(x,y){w(x,y)[I(x+u,y+v)-I(x,y)]^2}
+    Apply taylor series expansion for this.
+    (uIx)^2 + 2uvIxIy + (vIy)^2    ==> Represent in matrix format
+
+    Sigma(x,y) {w(x,y) [u v] [Ix^2 IxIy; IxIy Iy^2] [u;v]}
+    If we find the eigenvalues of the middle matrix, then we can determine if it is an edge, or a corner or a flat region.
+    Let L1,L2 be the eigenvalues of the matrix. It the gradient in any direction is more, then one of the eigenvalues is more.
+    So:
+        If both L1,L2 are small values, then it is a flat region.
+        If only one is a large value and the other is small => edge
+        If both are large values, then it is a corner.
+    As computing the eigenvalues of a matrix is computationally expensive, we do not do that.
+    Instead as we only need the relation in magnitude of the values, we compute the easier value
+    R = L1L2 - K(L1+L2)^2
+    where L1L2 is the trace of the matrix and L1+L2 is the determinant.
+    
+Codes:
+1. Hough Transform
+void hough(Mat img2,int i,int j)
+{
+    for(int k=0;k<360;k++){
+        int r = ((float)i)*cos((k/360.0)*2*3.14) + ((float)j)*sin((k/360.0)*2*3.14);
+        // if(r>= -(img.rows+img.cols) && r<(img.rows+img.cols))
+            img2.at<uchar> (r+img.rows+img.cols,k)+=10;
+    }
+}
+
+2. Contour Detection:
+void caller(int t,void *data)
+{
+    vector<vector<Point> >contours;
+    vector<Vec4i>hierarchy;
+    Mat img1 = *((Mat*)data);
+    Mat img2(img1.rows,img1.cols,CV_8UC1);
+    Canny(img1,img2,t,2*t,3);
+    findContours(img2,contours,hierarchy,RETR_EXTERNAL,CHAIN_APPROX_NONE);
+    Mat img3(img1.rows,img1.cols,CV_8UC1);
+    for(int i=0;i<contours.size();i++){
+        drawContours(img3,contours,i,255,2,8,hierarchy,1);
+    }
+    imshow("orig",img3);
+}
+
+
+
